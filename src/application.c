@@ -33,67 +33,204 @@ void printTime(char* text, TDayTime time)
     text[4] = lowMin;
 }
 
-void updateTimeTable()
+void updateTimeTableModeDisplay()
 {
     uint line;
-    uint offset;
+    uint stampIndex;
+    uint textIndex;
     
-    for (line = 0; line < MAXNUM_TIMESPANS; line++)
+    for (stampIndex = 0, textIndex = 0; stampIndex < MAXNUM_TIMESPANS * 2; stampIndex++, textIndex++)
     {
-        if (APPMODE_ADD && line * 2 == editPos) offset = 1;
-    
-        if (line * 2 < numStamps + offset)
+        if (stampIndex < numStamps)
         {
-            printTime(stampText[line * 2], stamp[line * 2 - offset]);
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "stampIndex: %i textIndex: %i", stampIndex, textIndex);
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "numStamps: %i stamp: %i % i", numStamps, stamp[stampIndex].hours, stamp[stampIndex].minutes);
+            printTime(stampText[textIndex], stamp[stampIndex]);
         }
         else
         {
-            memset(stampText[line * 2], 0, STAMP_TEXT_SIZE);
+            memset(stampText[textIndex], 0, STAMP_TEXT_SIZE);
         }
+    }
+    
+    for (line = 0; line < MAXNUM_TIMESPANS; line++)
+    {
         setTableTimeText(line * 2, stampText[line * 2]);
         
-        if (APPMODE_ADD && line * 2 + 1 == editPos) offset = 1;
-        
-        if (line * 2 + 1 < numStamps + offset)
+        if (line * 2 + 1 < numStamps)
         {
-            printTime(stampText[line * 2 + 1], stamp[line * 2 - offset]);
             setTableSpacerText(line, stringLine);
         }
         else
         {
-            memset(stampText[line * 2 + 1], 0, STAMP_TEXT_SIZE);
             setTableSpacerText(line, stringEmpty);
         }
         
         setTableTimeText(line * 2 + 1, stampText[line * 2 + 1]);
     }
+    
+    clearHighlight();
+}
+
+void updateTimeTableModeAdd()
+{
+    uint line;
+    uint stampIndex;
+    uint textIndex;
+    
+    for (stampIndex = 0, textIndex = 0; stampIndex < MAXNUM_TIMESPANS * 2; stampIndex++, textIndex++)
+    {
+        //APP_LOG(APP_LOG_LEVEL_DEBUG, "stampIndex: %i textIndex: %i", stampIndex, textIndex);
+        
+        if (stampIndex == editPos)
+        {
+            memset(stampText[textIndex], 0, STAMP_TEXT_SIZE);
+            textIndex++;
+        }
+        
+        if (stampIndex < numStamps)
+        {
+            printTime(stampText[textIndex], stamp[stampIndex]);
+        }
+        else
+        {
+            memset(stampText[textIndex], 0, STAMP_TEXT_SIZE);
+        }
+    }
+    
+    for (line = 0; line < MAXNUM_TIMESPANS; line++)
+    {
+        setTableTimeText(line * 2, stampText[line * 2]);
+        
+        if (line * 2 + 1 < numStamps + 1)
+        {
+            setTableSpacerText(line, stringLine);
+        }
+        else
+        {
+            setTableSpacerText(line, stringEmpty);
+        }
+        
+        setTableTimeText(line * 2 + 1, stampText[line * 2 + 1]);
+    }
+    
+    higlightTableTimeLayer(editPos);
 }
 
 void application_update_view()
 {
-    updateTimeTable();
+    if(appMode == APPMODE_ADD)
+    {
+        updateTimeTableModeAdd();
+    }
+    else
+    {
+        updateTimeTableModeDisplay();
+    }
 }
+
+void application_cycle_click_handler(ClickRecognizerRef recognizer, void *context)
+{
+    switch(appMode)
+    {
+        case APPMODE_DISPLAY: application_switch_mode(APPMODE_ADD); break;
+        case APPMODE_ADD:
+            application_switch_mode(APPMODE_DISPLAY);
+            /*
+            if (numStamps > 0)
+                application_switch_mode(APPMODE_REMOVE);
+            else
+                application_switch_mode(APPMODE_DISPLAY);
+            */
+            break;
+        case APPMODE_REMOVE: application_switch_mode(APPMODE_DISPLAY); break;
+    }
+}
+
+void application_makeStamp_click_handler(ClickRecognizerRef recognizer, void *context)
+{
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "making stamp. current numStamps %i", numStamps);
+    time_t currentTimestamp;
+    struct tm* currentTime;
+    
+    if (numStamps >= MAXNUM_TIMESPANS * 2) return;
+    
+    time(&currentTimestamp);
+    currentTime = localtime(&currentTimestamp);
+    
+    stamp[numStamps].hours = (uint8_t) currentTime->tm_hour;
+    stamp[numStamps].minutes = (uint8_t) currentTime->tm_min;
+    
+    numStamps++;
+    
+    application_update_view();
+}
+
+static void action_bar_click_config_provider_mode_display(void *context) {
+    //window_single_click_subscribe(BUTTON_ID_SELECT, settings_click_handler);
+    window_single_click_subscribe(BUTTON_ID_UP, application_cycle_click_handler);
+    window_single_click_subscribe(BUTTON_ID_DOWN, application_makeStamp_click_handler);
+}
+
+static void action_bar_click_config_provider_mode_add(void *context) {
+    //window_single_click_subscribe(BUTTON_ID_SELECT, settings_click_handler);
+    window_single_click_subscribe(BUTTON_ID_UP, application_cycle_click_handler);
+    //window_single_click_subscribe(BUTTON_ID_DOWN, makeStamp_click_handler);
+}
+
+static void action_bar_click_config_provider_mode_remove(void *context) {
+    //window_single_click_subscribe(BUTTON_ID_SELECT, settings_click_handler);
+    window_single_click_subscribe(BUTTON_ID_UP, application_cycle_click_handler);
+    //window_single_click_subscribe(BUTTON_ID_DOWN, makeStamp_click_handler);
+}
+
 
 void application_switch_mode(TAppMode mode)
 {
-    if (mode == APPMODE_ADD && numStamps >= MAXNUM_TIMESPANS * 2)
-    return;
+    switch(mode)
+    {
+        case APPMODE_DISPLAY:
+            setActionBarIcon(BUTTON_ID_UP, editIcon);
+            clearActionBarIcon(BUTTON_ID_SELECT);
+            setActionBarIcon(BUTTON_ID_DOWN, clockIcon);
+            setActionBarClickProvider(action_bar_click_config_provider_mode_display);
+        break;
+        
+        case APPMODE_ADD:
+            if (numStamps >= MAXNUM_TIMESPANS * 2)
+                return;
+            setActionBarIcon(BUTTON_ID_UP, editIcon);
+            clearActionBarIcon(BUTTON_ID_SELECT);
+            clearActionBarIcon(BUTTON_ID_DOWN);
+            setActionBarClickProvider(action_bar_click_config_provider_mode_add);
+        break;
+        
+        case APPMODE_REMOVE:
+            if (numStamps == 0)
+                return;
+            setActionBarIcon(BUTTON_ID_UP, editIcon);
+            clearActionBarIcon(BUTTON_ID_SELECT);
+            clearActionBarIcon(BUTTON_ID_DOWN);
+            setActionBarClickProvider(action_bar_click_config_provider_mode_remove);
+        break;
+    }
     
-    if (mode == APPMODE_REMOVE && numStamps == 0)
-    return;
     
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "mnew app mode %i", mode);
     appMode = mode;
     application_update_view();
 }
 
 void application_init()
 {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "appinit");
+    /*
     time_t savedTimestamp;
     struct tm* savedTime;
     
     time_t currentTimestamp;
     struct tm* currentTime;
-    
+    */
     
     appMode = APPMODE_DISPLAY;
     editPos = 0;
@@ -102,11 +239,12 @@ void application_init()
     
     numStamps = 0;
     
+    /*
     time(&currentTimestamp);
     currentTime = localtime(&currentTimestamp);
-    
+    */
     memset(stamp, 0, sizeof(TDayTime) * MAXNUM_TIMESPANS * 2);
-    
+    /*
     if (persist_exists(KEY_SAVEDATE) && persist_exists(KEY_STAMPS))
     {
         persist_read_data(KEY_SAVEDATE, (void*)&savedTimestamp, sizeof(savedTimestamp));
@@ -127,8 +265,11 @@ void application_init()
     {
         savedTimestamp = currentTimestamp;
     }
+    */
     
-    application_update_view();
+    application_switch_mode(APPMODE_DISPLAY);
+    
+    //application_update_view();
 }
 
 void application_deinit()

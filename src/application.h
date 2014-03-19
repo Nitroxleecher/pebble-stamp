@@ -32,8 +32,11 @@ extern uint editPos;
 
 
 void printTime(char* text, TDayTime time);
+void updateTimeTable();
 
 void application_update_view();
+
+void application_switch_mode(TAppMode mode);
 void application_init();
 void application_deinit();
 

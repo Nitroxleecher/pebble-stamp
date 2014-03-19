@@ -13,6 +13,7 @@ GBitmap* editIcon;
 GBitmap* backImage;
 
 InverterLayer* invLayer;
+ActionBarLayer *action_bar;
 
 void resources_init()
 {
@@ -55,43 +56,79 @@ void mainwindow_deinit(void)
 
 #define FONT_SIZE 19
 
+void setActionBarClickProvider(ClickConfigProvider provider)
+{
+    action_bar_layer_set_click_config_provider(action_bar, provider);
+}
+
+void clearActionBarIcon(ButtonId btn)
+{
+    action_bar_layer_clear_icon(action_bar, btn);
+}
+
+void setActionBarIcon(ButtonId btn, GBitmap* icon)
+{
+    action_bar_layer_set_icon(action_bar, btn, icon);
+}
+
 void mainwindow_load(Window *mainwindow)
 {
     GFont gothic18Font;
     int i;
+    
+    // get root layer for adding all sublayers
     Layer *window_layer = window_get_root_layer(mainwindow);
     //GRect bounds = layer_get_bounds(window_layer);
     
+    // create an inverted layer to show selection on display.
+    // append this layer to a tableLayersTime element to highlight it.
     invLayer = inverter_layer_create(
         (GRect) {.origin = { 0, 6 }, .size = { 100,100} }
     );
     
+    action_bar = action_bar_layer_create();
+    action_bar_layer_add_to_window(action_bar, mainwindow);
+     
+    action_bar_layer_set_icon(action_bar, BUTTON_ID_DOWN, clockIcon);
+    action_bar_layer_set_icon(action_bar, BUTTON_ID_SELECT, settingsIcon);
+    action_bar_layer_set_icon(action_bar, BUTTON_ID_UP, editIcon);
+    
+    
+    // load system font
     gothic18Font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
     
+    // create and layout text layers
     for (i = 0; i < MAXNUM_TIMESPANS; i++)
     {
+        // left time
         tableLayersTime[i*2] = text_layer_create(
             (GRect) {.origin = { 30, 0 + i * (FONT_SIZE) }, .size = { 37, FONT_SIZE } }
         );
         
+        // space with " - " in the middle
         tableLayersSpacer[i] = text_layer_create(
             (GRect) {.origin = { 67, 0 + i * (FONT_SIZE) }, .size = { 10, FONT_SIZE } }
         );
         
+        // right time
         tableLayersTime[i * 2 + 1] = text_layer_create(
             (GRect) {.origin = { 77, 0 + i * (FONT_SIZE) }, .size = { 37, FONT_SIZE } }
         );
         
+        // set font for all layers
         text_layer_set_font(tableLayersTime[i*2], gothic18Font);
         text_layer_set_font(tableLayersTime[i*2 + 1], gothic18Font);
         text_layer_set_font(tableLayersSpacer[i], gothic18Font);
         
+        // set center alignment for spacer layer
         text_layer_set_text_alignment(tableLayersSpacer[i], GTextAlignmentCenter);
         
-        text_layer_set_text(tableLayersTime[i*2], "12:34");
-        text_layer_set_text(tableLayersTime[i*2 + 1], "56:78");
-        text_layer_set_text(tableLayersSpacer[i], "-");
+        // add some random stuff
+        text_layer_set_text(tableLayersTime[i*2], "");
+        text_layer_set_text(tableLayersTime[i*2 + 1], "");
+        text_layer_set_text(tableLayersSpacer[i], "");
         
+        // add all textlayers to root layer
         layer_add_child(window_layer, text_layer_get_layer(tableLayersTime[i*2]));
         layer_add_child(window_layer, text_layer_get_layer(tableLayersTime[i*2 + 1]));
         layer_add_child(window_layer, text_layer_get_layer(tableLayersSpacer[i]));
@@ -101,8 +138,10 @@ void mainwindow_load(Window *mainwindow)
 void mainwindow_unload(Window *mainwindow)
 {
     int i;
-    
+    action_bar_layer_remove_from_window(action_bar);
+    action_bar_layer_destroy(action_bar);
     inverter_layer_destroy(invLayer);
+    
     
     for (i = 0; i < MAXNUM_TIMESPANS; i++)
     {
@@ -125,9 +164,14 @@ void setTableSpacerText(int index, const char* text)
     text_layer_set_text(tableLayersSpacer[index], text);
 }
 
-void higlightTableTimeLayer(int index)
+void clearHighlight()
 {
     layer_remove_from_parent((Layer*) invLayer);
+}
+
+void higlightTableTimeLayer(int index)
+{
+    clearHighlight();
     layer_add_child(text_layer_get_layer(tableLayersTime[index]), (Layer*)invLayer);
 }
 
