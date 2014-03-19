@@ -128,7 +128,7 @@ void setTableSpacerText(int index, const char* text)
 void higlightTableTimeLayer(int index)
 {
     layer_remove_from_parent((Layer*) invLayer);
-    layer_add_child(text_layer_get_layer(tableLayersTime[i*2]), (Layer*)invLayer);
+    layer_add_child(text_layer_get_layer(tableLayersTime[index]), (Layer*)invLayer);
 }
 
 

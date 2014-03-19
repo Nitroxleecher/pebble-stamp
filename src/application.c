@@ -44,7 +44,7 @@ void updateTimeTable()
     
         if (line * 2 < numStamps + offset)
         {
-            printTime(stampText[line * 2], stamp[line * 2] - offset);
+            printTime(stampText[line * 2], stamp[line * 2 - offset]);
         }
         else
         {
@@ -56,7 +56,7 @@ void updateTimeTable()
         
         if (line * 2 + 1 < numStamps + offset)
         {
-            printTime(stampText[line * 2 + 1], stamp[line * 2] - offset);
+            printTime(stampText[line * 2 + 1], stamp[line * 2 - offset]);
             setTableSpacerText(line, stringLine);
         }
         else
