@@ -1,8 +1,10 @@
 #include "window_main.h"
 #include "../model/model.h"
-
+#include "window_select.h"
 
 #define EDIT_MENU_NUM_SECTIONS 1
+#define EDIT_MENU_MAX_NUM_ITEMS 2
+
 //------------------------------------------------------------------------------
 // PUBLIC VARIABLES
 
@@ -26,6 +28,19 @@ static int16_t edit_menu_get_header_height_callback(MenuLayer *menu_layer, uint1
 static void edit_menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data);
 static void edit_menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data);
 void edit_menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data);
+
+typedef struct {
+    int menuitemCount;
+    void (*menuitem_draw[EDIT_MENU_MAX_NUM_ITEMS])(GContext* ctx, const Layer *cell_layer);
+    void (*menuitem_action[EDIT_MENU_MAX_NUM_ITEMS])();
+} TMenuItems;
+
+static TMenuItems menuItems;
+
+static void menuitem_draw_add();
+static void menuitem_draw_remove();
+static void menuitem_action_add();
+static void menuitem_action_remove();
 
 //==============================================================================
 // INIT AND CLEANUP FUNCTIONS
@@ -66,6 +81,28 @@ static void window_load(Window *wnd)
 
     edit_menu_layer = menu_layer_create(bounds);
     
+    if(appData.stampCount == 0)
+    {
+        menuItems.menuitemCount = 1;
+        menuItems.menuitem_draw[0] = &menuitem_draw_add;
+        menuItems.menuitem_action[0] = &menuitem_action_add;
+    }
+    else if (appData.stampCount == MAX_NUM_STAMPS)
+    {
+        menuItems.menuitemCount = 1;
+        menuItems.menuitem_draw[0] = &menuitem_draw_remove;
+        menuItems.menuitem_action[0] = &menuitem_action_remove;
+    }
+    else
+    {
+        menuItems.menuitemCount = 2;
+        menuItems.menuitem_draw[0] = &menuitem_draw_add;
+        menuItems.menuitem_action[0] = &menuitem_action_add;
+        menuItems.menuitem_draw[1] = &menuitem_draw_remove;
+        menuItems.menuitem_action[1] = &menuitem_action_remove;
+    }
+    
+    
     // Set all the callbacks for the menu layer
     menu_layer_set_callbacks(edit_menu_layer, NULL, (MenuLayerCallbacks){
         .get_num_sections = edit_menu_get_num_sections_callback,
@@ -103,7 +140,7 @@ static uint16_t edit_menu_get_num_sections_callback(MenuLayer *menu_layer, void 
 
 static uint16_t edit_menu_get_num_rows_callback(MenuLayer *menu_layer, uint16_t section_index, void *data)
 {
-    return 2;
+    return menuItems.menuitemCount;
 }
 
 static int16_t edit_menu_get_header_height_callback(MenuLayer *menu_layer, uint16_t section_index, void *data)
@@ -121,31 +158,37 @@ static void edit_menu_draw_header_callback(GContext* ctx, const Layer *cell_laye
 // This is the menu item draw callback where you specify what each item should look like
 static void edit_menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data)
 {
-    switch (cell_index->row) {
-        case 0:
-            // This is a basic menu item with a title and subtitle
-            menu_cell_basic_draw(ctx, cell_layer, "Add", "Add a stamp", NULL);
-        break;
-
-        case 1:
-            // This is a basic menu icon with a cycling icon
-            menu_cell_basic_draw(ctx, cell_layer, "Remove", "Delete a stamp", NULL);
-        break;
-    }
+    (*(menuItems.menuitem_draw[cell_index->row]))(ctx, cell_layer);
 }
 
 // Here we capture when a user selects a menu item
 void edit_menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data)
 {
-    // Use the row to specify which item will receive the select action
-    switch (cell_index->row) {
-        case 0:
-        break;
-
-        case 1:
-        break;
-    }
+    (*(menuItems.menuitem_action[cell_index->row]))();
 }
 
 //==============================================================================
 // APPLICATION FUNCTIONS
+
+
+static void menuitem_draw_add(GContext* ctx, const Layer *cell_layer)
+{
+    menu_cell_basic_draw(ctx, cell_layer, "Add", "Add a stamp", NULL);
+}
+
+static void menuitem_draw_remove(GContext* ctx, const Layer *cell_layer)
+{
+    menu_cell_basic_draw(ctx, cell_layer, "Remove", "Delete a stamp", NULL);
+}
+
+static void menuitem_action_add()
+{
+    window_select_set_mode(SELECTMODE_ADD);
+    window_stack_push(window_select, true);
+}
+
+static void menuitem_action_remove()
+{
+    window_select_set_mode(SELECTMODE_REMOVE);
+    window_stack_push(window_select, true);
+}

@@ -2,18 +2,20 @@
 #include "model/model.h"
 #include "view/window_main.h"
 #include "view/window_editmenu.h"
-
-#define log(...) app_log(APP_LOG_LEVEL_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
+#include "view/window_select.h"
 
 int main(void) {
     model_init();
     window_init_main();
     window_init_editmenu();
+    window_init_select();
+    
     app_event_loop();
 
+    model_deinit();
     window_deinit_main();
     window_deinit_editmenu();
-    model_deinit();
-
+    window_deinit_select();
+    
     log("clean exit");
 }
