@@ -1,7 +1,9 @@
 #include "window_main.h"
 #include "../model/model.h"
 #include "../control/control_main.h"
+#include "window_editmenu.h"
 
+#define EDIT_MENU_NUM_SECTIONS 1
 //------------------------------------------------------------------------------
 // PUBLIC VARIABLES
 
@@ -29,6 +31,12 @@ static GBitmap* editIcon;
 static void window_load(Window *wnd);
 static void window_unload(Window *wnd);
 static void string_print_daytime(char* text, TDayTime time);
+static void click_config_provider_main(void *context);
+
+static void click_handler_up(ClickRecognizerRef recognizer, void *context);
+static void click_handler_select(ClickRecognizerRef recognizer, void *context);
+static void click_handler_down(ClickRecognizerRef recognizer, void *context);
+static void click_handler_back(ClickRecognizerRef recognizer, void *context);
 //==============================================================================
 // INIT AND CLEANUP FUNCTIONS
 
@@ -65,7 +73,8 @@ static void window_load(Window *wnd)
 {
     GFont gothic18Font;
     int i;
-
+    //GRect bounds;
+    
     clockIcon = gbitmap_create_with_resource(RESOURCE_ID_CLOCK_ICON);
     settingsIcon = gbitmap_create_with_resource(RESOURCE_ID_SETTINGS_ICON);
     editIcon = gbitmap_create_with_resource(RESOURCE_ID_EDIT_ICON);
@@ -75,6 +84,8 @@ static void window_load(Window *wnd)
 
 
     rootlayer = window_get_root_layer(wnd);
+    //bounds = layer_get_frame(rootlayer);
+    
     action_bar = action_bar_layer_create();
 
     action_bar_layer_add_to_window(action_bar, wnd);
@@ -150,6 +161,33 @@ static void window_unload(Window *wnd)
 //==============================================================================
 // CLICK HANDLERS
 
+static void click_config_provider_main(void *context)
+{
+    window_single_click_subscribe(BUTTON_ID_UP, click_handler_up);
+    window_single_click_subscribe(BUTTON_ID_SELECT, click_handler_select);
+    window_single_click_subscribe(BUTTON_ID_DOWN, click_handler_down);
+    window_single_click_subscribe(BUTTON_ID_BACK, click_handler_back);
+}
+
+static void click_handler_up(ClickRecognizerRef recognizer, void *context)
+{
+    window_stack_push(window_editmenu, true);
+}
+
+static void click_handler_select(ClickRecognizerRef recognizer, void *context)
+{
+    control_main_showSettingsMenu();
+}
+
+static void click_handler_down(ClickRecognizerRef recognizer, void *context)
+{
+    control_main_makeStamp();
+}
+
+static void click_handler_back(ClickRecognizerRef recognizer, void *context)
+{
+    control_main_exitApp();
+}
 
 //==============================================================================
 // APPLICATION FUNCTIONS
