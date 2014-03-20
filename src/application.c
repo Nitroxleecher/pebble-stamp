@@ -160,7 +160,7 @@ void application_update_view()
     }
 }
 
-void application_cycle_click_handler(ClickRecognizerRef recognizer, void *context)
+void application_mode_cycle_click_handler(ClickRecognizerRef recognizer, void *context)
 {
     switch(appMode)
     {
@@ -185,6 +185,16 @@ void application_cycle_click_handler(ClickRecognizerRef recognizer, void *contex
             break;
         case APPMODE_REMOVE: application_switch_mode(APPMODE_DISPLAY); break;
     }
+}
+
+void application_mode_set_display_click_handler(ClickRecognizerRef recognizer, void *context)
+{
+    application_switch_mode(APPMODE_DISPLAY);
+}
+
+void application_exit_click_handler(ClickRecognizerRef recognizer, void *context)
+{
+    window_stack_pop_all(true);
 }
 
 void application_makeStamp_click_handler(ClickRecognizerRef recognizer, void *context)
@@ -213,26 +223,36 @@ void application_selectPrev_click_handler(ClickRecognizerRef recognizer, void *c
 
 void application_selectNext_click_handler(ClickRecognizerRef recognizer, void *context)
 {
-    if (editPos < numStamps) editPos++;
+    if (appMode == APPMODE_ADD)
+    {
+        if (editPos < numStamps) editPos++;
+    }
+    else if (appMode == APPMODE_REMOVE)
+    {
+        if (editPos < numStamps - 1) editPos++;
+    }
     application_update_view();
 }
 
 static void action_bar_click_config_provider_mode_display(void *context) {
-    window_single_click_subscribe(BUTTON_ID_SELECT, application_cycle_click_handler);
+    window_single_click_subscribe(BUTTON_ID_SELECT, application_mode_cycle_click_handler);
     //window_single_click_subscribe(BUTTON_ID_UP, );
     window_single_click_subscribe(BUTTON_ID_DOWN, application_makeStamp_click_handler);
+    window_single_click_subscribe(BUTTON_ID_BACK, application_exit_click_handler);
 }
 
 static void action_bar_click_config_provider_mode_add(void *context) {
-    window_single_click_subscribe(BUTTON_ID_SELECT, application_cycle_click_handler);
+    window_single_click_subscribe(BUTTON_ID_SELECT, application_mode_cycle_click_handler);
     window_single_click_subscribe(BUTTON_ID_UP, application_selectPrev_click_handler);
     window_single_click_subscribe(BUTTON_ID_DOWN, application_selectNext_click_handler);
+    window_single_click_subscribe(BUTTON_ID_BACK, application_mode_set_display_click_handler);
 }
 
 static void action_bar_click_config_provider_mode_remove(void *context) {
-    window_single_click_subscribe(BUTTON_ID_SELECT, application_cycle_click_handler);
+    window_single_click_subscribe(BUTTON_ID_SELECT, application_mode_cycle_click_handler);
     window_single_click_subscribe(BUTTON_ID_UP, application_selectPrev_click_handler);
     window_single_click_subscribe(BUTTON_ID_DOWN, application_selectNext_click_handler);
+    window_single_click_subscribe(BUTTON_ID_BACK, application_mode_set_display_click_handler);
 }
 
 
@@ -250,6 +270,7 @@ void application_switch_mode(TAppMode mode)
         case APPMODE_ADD:
             if (numStamps >= MAXNUM_TIMESPANS * 2)
                 return;
+            editPos = 0;
             clearActionBarIcon(BUTTON_ID_UP);
             setActionBarIcon(BUTTON_ID_SELECT, editIcon);
             clearActionBarIcon(BUTTON_ID_DOWN);
@@ -259,6 +280,7 @@ void application_switch_mode(TAppMode mode)
         case APPMODE_REMOVE:
             if (numStamps == 0)
                 return;
+            editPos = 0;
             clearActionBarIcon(BUTTON_ID_UP);
             setActionBarIcon(BUTTON_ID_SELECT, editIcon);
             clearActionBarIcon(BUTTON_ID_DOWN);
