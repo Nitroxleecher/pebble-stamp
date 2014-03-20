@@ -1,6 +1,5 @@
 #include "window_main.h"
 #include "../model/model.h"
-#include "../control/control_main.h"
 #include "window_editmenu.h"
 
 #define EDIT_MENU_NUM_SECTIONS 1
@@ -176,17 +175,18 @@ static void click_handler_up(ClickRecognizerRef recognizer, void *context)
 
 static void click_handler_select(ClickRecognizerRef recognizer, void *context)
 {
-    control_main_showSettingsMenu();
+    
 }
 
 static void click_handler_down(ClickRecognizerRef recognizer, void *context)
 {
-    control_main_makeStamp();
+    model_make_stamp();
+    window_update_view_main();
 }
 
 static void click_handler_back(ClickRecognizerRef recognizer, void *context)
 {
-    control_main_exitApp();
+    window_stack_pop_all(true);
 }
 
 //==============================================================================
