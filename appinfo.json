@@ -32,6 +32,16 @@
             "name": "BACK_IMAGE",
             "file": "img/back.png",
             "type": "png"
+        },
+        {
+            "name": "ARROW_UP_ICON",
+            "file": "img/arrow_up.png",
+            "type": "png"
+        },
+        {
+            "name": "ARROW_DOWN_ICON",
+            "file": "img/arrow_down.png",
+            "type": "png"
         }
     ]
   }
