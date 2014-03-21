@@ -14,15 +14,24 @@ Window* window_main;
 static Layer* rootlayer;
 static ActionBarLayer* action_bar;
 
-static TextLayer *textLayerTime[MAX_NUM_STAMPS];
-static TextLayer *textLayerSpacer[MAX_NUM_TIME_PERIODS];
-
+static TextLayer* textLayerTime[MAX_NUM_STAMPS];
 #define STAMP_TEXT_SIZE 6
 static char stampText[MAX_NUM_STAMPS][STAMP_TEXT_SIZE];
+
+
+static TextLayer* textLayerSpacer[MAX_NUM_TIME_PERIODS];
+
+static TextLayer* textLayerTimeWorked;
+static char timeWorkedText[] = "Total: 00:00";
+
+
+
 
 static GBitmap* clockIcon;
 static GBitmap* settingsIcon;
 static GBitmap* editIcon;
+
+static struct tm* currentTime;
 
 //------------------------------------------------------------------------------
 // PRIVATE FUNCTIONS
@@ -31,6 +40,8 @@ static void window_load(Window *wnd);
 static void window_unload(Window *wnd);
 static void string_print_daytime(char* text, TDayTime time);
 static void click_config_provider_main(void *context);
+
+static void tickHandler(struct tm *tick_time, TimeUnits units_changed);
 
 static void click_handler_up(ClickRecognizerRef recognizer, void *context);
 static void click_handler_select(ClickRecognizerRef recognizer, void *context);
@@ -70,9 +81,14 @@ void window_deinit_main()
 
 static void window_load(Window *wnd)
 {
+    time_t timestamp;
     GFont gothic18Font;
     int i;
-    //GRect bounds;
+    GRect bounds;
+    
+    time(&timestamp);
+    currentTime = localtime(&timestamp);
+    
     
     clockIcon = gbitmap_create_with_resource(RESOURCE_ID_CLOCK_ICON);
     settingsIcon = gbitmap_create_with_resource(RESOURCE_ID_SETTINGS_ICON);
@@ -83,7 +99,7 @@ static void window_load(Window *wnd)
 
 
     rootlayer = window_get_root_layer(wnd);
-    //bounds = layer_get_frame(rootlayer);
+    bounds = layer_get_frame(rootlayer);
     
     action_bar = action_bar_layer_create();
 
@@ -95,6 +111,14 @@ static void window_load(Window *wnd)
     action_bar_layer_set_icon(action_bar, BUTTON_ID_SELECT, settingsIcon);
     action_bar_layer_set_icon(action_bar, BUTTON_ID_UP, editIcon);
 
+    textLayerTimeWorked = text_layer_create(
+        (GRect) {.origin = { 30, bounds.size.h - (FONT_SIZE) - 10 }, .size = { 94, FONT_SIZE } }
+    );
+    
+    text_layer_set_font(textLayerTimeWorked, gothic18Font);
+    
+    
+    
     // create and layout text layers
     for (i = 0; i < MAX_NUM_TIME_PERIODS; i++)
     {
@@ -132,6 +156,16 @@ static void window_load(Window *wnd)
         layer_add_child(rootlayer, text_layer_get_layer(textLayerSpacer[i]));
     }
 
+    layer_add_child(rootlayer, text_layer_get_layer(textLayerTimeWorked));
+    
+    tick_timer_service_subscribe(MINUTE_UNIT, &tickHandler);
+    
+    window_update_view_main();
+}
+
+static void tickHandler(struct tm *tick_time, TimeUnits units_changed)
+{
+    currentTime = tick_time;
     window_update_view_main();
 }
 
@@ -142,12 +176,16 @@ static void window_unload(Window *wnd)
 {
     int i;
 
+    tick_timer_service_unsubscribe();
+    
     action_bar_layer_destroy(action_bar);
 
     gbitmap_destroy(clockIcon);
     gbitmap_destroy(settingsIcon);
     gbitmap_destroy(editIcon);
 
+    text_layer_destroy(textLayerTimeWorked);
+    
     for (i = 0; i < MAX_NUM_TIME_PERIODS; i++)
     {
         text_layer_destroy(textLayerTime[i*2]);
@@ -207,11 +245,15 @@ static void string_print_daytime(char* text, TDayTime time)
     text[4] = lowMin;
 }
 
+
+
 void window_update_view_main()
 {
     uint line;
     uint stampIndex;
-
+    int timeDelta = 0;
+    TDayTime dayTimeWorked;
+    
     for (stampIndex = 0; stampIndex < MAX_NUM_STAMPS; stampIndex++)
     {
         if (stampIndex < appData.stampCount)
@@ -239,4 +281,31 @@ void window_update_view_main()
 
          text_layer_set_text(textLayerTime[line * 2 + 1], stampText[line * 2 + 1]);
     }
+    
+    for (stampIndex = 0; stampIndex < appData.stampCount; stampIndex++)
+    {
+        if (stampIndex % 2 == 0)
+        {
+            timeDelta -= (appData.stamp[stampIndex].hours * 60);
+            timeDelta -= appData.stamp[stampIndex].minutes;
+        }
+        else
+        {
+            timeDelta += (appData.stamp[stampIndex].hours * 60);
+            timeDelta += appData.stamp[stampIndex].minutes;
+        }
+    }
+    
+    if (appData.stampCount > 0 && appData.stampCount % 2 != 0)
+    {
+        timeDelta += (currentTime->tm_hour * 60);
+        timeDelta += currentTime->tm_min;
+    }
+    
+    dayTimeWorked.hours = (char)(timeDelta / 60);
+    dayTimeWorked.minutes = (char)(timeDelta % 60);
+    
+    string_print_daytime(timeWorkedText + sizeof(timeWorkedText) - 6, dayTimeWorked);
+    
+    text_layer_set_text(textLayerTimeWorked, timeWorkedText);
 }

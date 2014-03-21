@@ -175,7 +175,7 @@ static void click_handler_up(ClickRecognizerRef recognizer, void *context)
     }
     else
     {
-        timeToEdit.minutes = (timeToEdit.minutes - 1) % 24;
+        timeToEdit.minutes = (timeToEdit.minutes - 1) % 60;
     }
     window_update_view_edittime();
 }
@@ -203,7 +203,7 @@ static void click_handler_down(ClickRecognizerRef recognizer, void *context)
     }
     else
     {
-        timeToEdit.minutes = (timeToEdit.minutes + 1) % 24;
+        timeToEdit.minutes = (timeToEdit.minutes + 1) % 60;
     }
     window_update_view_edittime();
 }

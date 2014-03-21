@@ -22,6 +22,9 @@ void model_init()
     memset(appData.stamp, 0, sizeof(appData.stamp));
     appData.stampCount = 0;
 
+    settings.timeToWork.hours = 8;
+    settings.timeToWork.minutes = 40;
+    
     time(&currentTimestamp);
     currentTime = localtime(&currentTimestamp);
 
