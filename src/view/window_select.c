@@ -1,5 +1,10 @@
 #include "window_select.h"
+#include "window_main.h"
+#include "window_edittime.h"
+
 #include "../model/model.h"
+#include <time.h>
+
 
 //------------------------------------------------------------------------------
 // PUBLIC VARIABLES
@@ -34,6 +39,8 @@ static void window_unload(Window *wnd);
 static void string_print_daytime(char* text, TDayTime time);
 static void click_config_provider_select(void *context);
 
+static void editTimeCallback(TDayTime timeToInsert);
+
 static void click_handler_up(ClickRecognizerRef recognizer, void *context);
 static void click_handler_select(ClickRecognizerRef recognizer, void *context);
 static void click_handler_down(ClickRecognizerRef recognizer, void *context);
@@ -48,7 +55,6 @@ static void click_handler_back(ClickRecognizerRef recognizer, void *context);
 void window_init_select()
 {
     window_select = window_create();
-    window_set_fullscreen(window_select, true);
 
     window_set_window_handlers(window_select, (WindowHandlers) {
         .load = window_load,
@@ -188,7 +194,28 @@ static void click_handler_up(ClickRecognizerRef recognizer, void *context)
 
 static void click_handler_select(ClickRecognizerRef recognizer, void *context)
 {
+    TDayTime timeToEdit;
+    time_t currentTimestamp;
+    struct tm* currentTime;
+
+    if (selectMode == SELECTMODE_ADD)
+    {
     
+        time(&currentTimestamp);
+        currentTime = localtime(&currentTimestamp);
+        
+        timeToEdit.hours = (uint8_t) currentTime->tm_hour;
+        timeToEdit.minutes = (uint8_t) currentTime->tm_min;
+        
+        window_edittime_configure(timeToEdit, &editTimeCallback);
+        window_stack_push(window_edittime, true);
+    }
+    else if (selectMode == SELECTMODE_REMOVE)
+    {
+        model_remove_time(editPos);
+        window_stack_pop_all(true);
+        window_stack_push(window_main, true);
+    }
 }
 
 static void click_handler_down(ClickRecognizerRef recognizer, void *context)
@@ -212,6 +239,10 @@ static void click_handler_back(ClickRecognizerRef recognizer, void *context)
 //==============================================================================
 // APPLICATION FUNCTIONS
 
+static void editTimeCallback(TDayTime timeToInsert)
+{
+    model_insert_time(editPos, timeToInsert);
+}
 
 static void string_print_daytime(char* text, TDayTime time)
 {
