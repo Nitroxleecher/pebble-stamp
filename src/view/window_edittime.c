@@ -171,11 +171,11 @@ static void click_handler_up(ClickRecognizerRef recognizer, void *context)
 {
     if (editPos == 0)
     {
-        timeToEdit.hours = (timeToEdit.hours + 1) % 24;
+        timeToEdit.hours = (timeToEdit.hours - 1) % 24;
     }
     else
     {
-        timeToEdit.minutes = (timeToEdit.minutes + 1) % 24;
+        timeToEdit.minutes = (timeToEdit.minutes - 1) % 24;
     }
     window_update_view_edittime();
 }
@@ -199,11 +199,11 @@ static void click_handler_down(ClickRecognizerRef recognizer, void *context)
 {
     if (editPos == 0)
     {
-        timeToEdit.hours = (timeToEdit.hours - 1) % 24;
+        timeToEdit.hours = (timeToEdit.hours + 1) % 24;
     }
     else
     {
-        timeToEdit.minutes = (timeToEdit.minutes - 1) % 24;
+        timeToEdit.minutes = (timeToEdit.minutes + 1) % 24;
     }
     window_update_view_edittime();
 }

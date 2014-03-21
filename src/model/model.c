@@ -5,15 +5,64 @@
 TSettings settings;
 TAppData appData;
 
+static time_t savedTimestamp;
+
+
+static const uint32_t KEY_SAVEDATE = 0x01;
+static const uint32_t KEY_STAMPS = 0x02;
+static const uint32_t KEY_STAMPINDEX = 0x03;
+static const uint32_t KEY_TIMETOWORK = 0x04;
+
 void model_init()
 {
+    struct tm* savedTime;
+    time_t currentTimestamp;
+    struct tm* currentTime;
+    
     memset(appData.stamp, 0, sizeof(appData.stamp));
     appData.stampCount = 0;
+
+    time(&currentTimestamp);
+    currentTime = localtime(&currentTimestamp);
+
+    if (persist_exists(KEY_SAVEDATE) && persist_exists(KEY_STAMPS))
+    {
+        persist_read_data(KEY_SAVEDATE, (void*)&savedTimestamp, sizeof(savedTimestamp));
+
+        savedTime = localtime(&savedTimestamp);
+
+        if (savedTime->tm_year == currentTime->tm_year && savedTime->tm_yday == currentTime->tm_yday)
+        {
+            if (persist_get_size(KEY_STAMPS) == sizeof(TDayTime) * MAX_NUM_STAMPS)
+            {
+                persist_read_data(KEY_STAMPS, (void*)appData.stamp, sizeof(TDayTime) * MAX_NUM_STAMPS);
+                persist_read_data(KEY_STAMPINDEX, (void*)&appData.stampCount, sizeof(appData.stampCount));
+                if (appData.stampCount > MAX_NUM_STAMPS)
+                {
+                    appData.stampCount = MAX_NUM_STAMPS;
+                }
+            }
+            else
+            {
+                savedTimestamp = currentTimestamp;
+            }
+        }
+        else
+        {
+            savedTimestamp = currentTimestamp;
+        }
+    }
+    else
+    {
+        savedTimestamp = currentTimestamp;
+    }
 }
 
 void model_deinit()
 {
-
+    persist_write_data(KEY_SAVEDATE, (void*)&savedTimestamp, sizeof(savedTimestamp));
+    persist_write_data(KEY_STAMPS, (void*)appData.stamp, sizeof(TDayTime) * MAX_NUM_STAMPS);
+    persist_write_data(KEY_STAMPINDEX, (void*)&appData.stampCount, sizeof(appData.stampCount));
 }
 
 void model_make_stamp()
