@@ -3,7 +3,7 @@
 #include "window_select.h"
 
 #define EDIT_MENU_NUM_SECTIONS 1
-#define EDIT_MENU_MAX_NUM_ITEMS 2
+#define EDIT_MENU_MAX_NUM_ITEMS 3
 
 //------------------------------------------------------------------------------
 // PUBLIC VARIABLES
@@ -39,8 +39,10 @@ static TMenuItems menuItems;
 
 static void menuitem_draw_add();
 static void menuitem_draw_remove();
+static void menuitem_draw_remove_all();
 static void menuitem_action_add();
 static void menuitem_action_remove();
+static void menuitem_action_remove_all();
 
 //==============================================================================
 // INIT AND CLEANUP FUNCTIONS
@@ -89,17 +91,21 @@ static void window_load(Window *wnd)
     }
     else if (appData.stampCount == MAX_NUM_STAMPS)
     {
-        menuItems.menuitemCount = 1;
+        menuItems.menuitemCount = 2;
         menuItems.menuitem_draw[0] = &menuitem_draw_remove;
         menuItems.menuitem_action[0] = &menuitem_action_remove;
+        menuItems.menuitem_draw[1] = &menuitem_draw_remove_all;
+        menuItems.menuitem_action[1] = &menuitem_action_remove_all;
     }
     else
     {
-        menuItems.menuitemCount = 2;
+        menuItems.menuitemCount = 3;
         menuItems.menuitem_draw[0] = &menuitem_draw_add;
         menuItems.menuitem_action[0] = &menuitem_action_add;
         menuItems.menuitem_draw[1] = &menuitem_draw_remove;
         menuItems.menuitem_action[1] = &menuitem_action_remove;
+        menuItems.menuitem_draw[2] = &menuitem_draw_remove_all;
+        menuItems.menuitem_action[2] = &menuitem_action_remove_all;
     }
     
     
@@ -181,6 +187,11 @@ static void menuitem_draw_remove(GContext* ctx, const Layer *cell_layer)
     menu_cell_basic_draw(ctx, cell_layer, "Remove", "Delete a stamp", NULL);
 }
 
+static void menuitem_draw_remove_all(GContext* ctx, const Layer *cell_layer)
+{
+    menu_cell_basic_draw(ctx, cell_layer, "Remove all", "Delete all stamps", NULL);
+}
+
 static void menuitem_action_add()
 {
     window_select_set_mode(SELECTMODE_ADD);
@@ -191,4 +202,11 @@ static void menuitem_action_remove()
 {
     window_select_set_mode(SELECTMODE_REMOVE);
     window_stack_push(window_select, true);
+}
+
+static void menuitem_action_remove_all()
+{
+    model_remove_all();
+    window_stack_pop_all(true);
+    window_stack_push(window_main, true);
 }

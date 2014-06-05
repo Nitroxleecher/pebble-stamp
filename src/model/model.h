@@ -31,3 +31,4 @@ void model_deinit();
 void model_make_stamp();
 void model_insert_time(unsigned int editPos, TDayTime timeToInsert);
 void model_remove_time(unsigned int editPos);
+void model_remove_all(void);

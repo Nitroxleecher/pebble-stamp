@@ -113,3 +113,15 @@ void model_remove_time(unsigned int editPos)
     appData.stamp[appData.stampCount].hours = 0;
     appData.stamp[appData.stampCount].minutes = 0;
 }
+
+void model_remove_all(void)
+{
+    unsigned int i;
+    appData.stampCount = 0;
+    
+    for (i = 0; i < MAX_NUM_STAMPS; i++)
+    {
+        appData.stamp[i].hours = 0;
+        appData.stamp[i].minutes = 0;
+    }
+}
