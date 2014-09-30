@@ -1,49 +1,52 @@
 {
-  "uuid": "427a35bb-913e-4b9b-899f-0a027206f242",
-  "shortName": "stamp",
-  "longName": "stamp",
-  "companyName": "MakeAwesomeHappen",
-  "versionCode": 1,
-  "versionLabel": "1.0.0",
-  "capabilities": [ "configurable" ],
-  "watchapp": {
-    "watchface": false
-  },
-  "appKeys": {
-    "dummy": 0
-  },
-  "resources": {
-    "media": [
-        {
-            "name": "SETTINGS_ICON",
-            "file": "img/settings.png",
-            "type": "png"
-        },
-        {
-            "name": "CLOCK_ICON",
-            "file": "img/clock.png",
-            "type": "png"
-        },
-        {
-            "name": "EDIT_ICON",
-            "file": "img/edit.png",
-            "type": "png"
-        },
-        {
-            "name": "BACK_IMAGE",
-            "file": "img/back.png",
-            "type": "png"
-        },
-        {
-            "name": "ARROW_UP_ICON",
-            "file": "img/arrow_up.png",
-            "type": "png"
-        },
-        {
-            "name": "ARROW_DOWN_ICON",
-            "file": "img/arrow_down.png",
-            "type": "png"
-        }
-    ]
-  }
+    "appKeys": {
+        "dummy": 0
+    },
+    "capabilities": [
+        "configurable"
+    ],
+    "companyName": "Nitroxleecher",
+    "longName": "stamp",
+    "projectType": "native",
+    "resources": {
+        "media": [
+            {
+                "file": "images/arrow_down.png",
+                "name": "ARROW_DOWN_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/arrow_up.png",
+                "name": "ARROW_UP_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/back.png",
+                "name": "BACK_IMAGE",
+                "type": "png"
+            },
+            {
+                "file": "images/edit.png",
+                "name": "EDIT_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/clock.png",
+                "name": "CLOCK_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/settings.png",
+                "name": "SETTINGS_ICON",
+                "type": "png"
+            }
+        ]
+    },
+    "shortName": "stamp",
+    "uuid": "427a35bb-913e-4b9b-899f-0a027206f242",
+    "versionCode": 1,
+    "versionLabel": "0.1",
+    "watchapp": {
+        "watchface": false
+    }
 }
