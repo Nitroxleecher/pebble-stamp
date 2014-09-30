@@ -1,5 +1,5 @@
 #include <pebble.h>
-#include "../model/model.h"
+#include "model/model.h"
 
 extern Window* window_edittime;
 

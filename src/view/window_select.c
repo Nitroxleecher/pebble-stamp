@@ -2,7 +2,7 @@
 #include "window_main.h"
 #include "window_edittime.h"
 
-#include "../model/model.h"
+#include "model/model.h"
 #include <time.h>
 
 

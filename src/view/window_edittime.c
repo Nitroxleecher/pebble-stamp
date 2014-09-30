@@ -1,6 +1,6 @@
 #include "window_edittime.h"
 #include "window_main.h"
-#include "../model/model.h"
+#include "model/model.h"
 
 //------------------------------------------------------------------------------
 // PUBLIC VARIABLES

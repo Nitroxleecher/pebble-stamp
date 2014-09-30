@@ -1,5 +1,5 @@
 #include "window_main.h"
-#include "../model/model.h"
+#include "model/model.h"
 #include "window_select.h"
 
 #define EDIT_MENU_NUM_SECTIONS 1
