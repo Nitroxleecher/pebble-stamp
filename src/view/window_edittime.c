@@ -167,15 +167,29 @@ static void click_config_provider_edittime(void *context)
     window_single_click_subscribe(BUTTON_ID_BACK, click_handler_back);
 }
 
-static void click_handler_up(ClickRecognizerRef recognizer, void *context)
+static void click_handler_down(ClickRecognizerRef recognizer, void *context)
 {
     if (editPos == 0)
     {
-        timeToEdit.hours = (timeToEdit.hours - 1) % 24;
+        if (timeToEdit.hours > 0)
+        {
+          timeToEdit.hours--;
+        }
+        else
+        {
+          timeToEdit.hours = 23;
+        }
     }
     else
     {
-        timeToEdit.minutes = (timeToEdit.minutes - 1) % 60;
+        if (timeToEdit.minutes > 0)
+        {
+          timeToEdit.minutes--;
+        }
+        else
+        {
+          timeToEdit.minutes = 59;
+        }
     }
     window_update_view_edittime();
 }
@@ -195,7 +209,7 @@ static void click_handler_select(ClickRecognizerRef recognizer, void *context)
     }
 }
 
-static void click_handler_down(ClickRecognizerRef recognizer, void *context)
+static void click_handler_up(ClickRecognizerRef recognizer, void *context)
 {
     if (editPos == 0)
     {
